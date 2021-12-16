@@ -64,7 +64,7 @@ namespace graph {
 
     bool addRandomEdges2();
     bool addEdge(unsigned long e);
-    void removeEdge(unsigned long e);
+    void removeEdge(Edge e);
 
     // Создаём большой цикл, ходим по нему, соединяя вершины на расстаянии 5
     void cycleWithCycles();
@@ -85,6 +85,7 @@ namespace graph {
     const int initSize;
     long curWeight = 0;
     std::shared_ptr<GraphMatrix> matrix;
+    std::shared_ptr<GraphMatrix> availabileEGraph;
     std::shared_ptr<GraphMatrix> solutionGraph;
     long bestWeight = 0;
     Solution<GraphMatrix> best;
