@@ -18,8 +18,8 @@ void solve(const std::filesystem::path& inFile,
 // python3 imgs.py рисует картинки по файам задач/решений
 // Так было выяснено, что распределение вершин совсем не равномерное
 int main() {
-  std::time_t seed = std::time(nullptr);
-  //  std::time_t seed = NULL;
+  //  std::time_t seed = std::time(nullptr);
+  std::time_t seed = NULL;
   srand(seed);
   std::cout << "Seed: " << seed << std::endl;
   //  std::thread t2(solve, "../Taxicab_2048.txt", "../Kurbatov_2048.txt");

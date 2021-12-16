@@ -205,14 +205,20 @@ void C3c4free::cycleWithCycles() {
       (*matrix)[boost::edge(full_cycle.front(), full_cycle.back(), *matrix)
                     .first]
           .weight;
-  size_t i = 0;
-  size_t j = i + 5;
-  for (; j < full_cycle.size(); i += 2, j += 2) {
-    boost::add_edge(full_cycle[i], full_cycle[j], *solutionGraph);
-    curWeight +=
-        (*matrix)[boost::edge(full_cycle[i], full_cycle[j], *matrix).first]
-            .weight;
-  }
+  //  size_t i = 0;
+  //  size_t j = i + 7;
+  //  for (; j < full_cycle.size(); i += 2, j += 2) {
+  //    boost::add_edge(full_cycle[i], full_cycle[j], *solutionGraph);
+  //    curWeight +=
+  //        (*matrix)[boost::edge(full_cycle[i], full_cycle[j], *matrix).first]
+  //            .weight;
+  //  }
+
+  for (auto& v : full_cycle)
+    std::cout << v << " ";
+
+  for (int i = 0; i < 100000; ++i)
+    addRandomEdges();
 }
 
 void C3c4free::removeEdge(unsigned long solution_edge_num) {
@@ -418,7 +424,8 @@ bool C3c4free::add5Cycle() {
 }
 
 bool C3c4free::hasC3C4(unsigned long source, unsigned long target) {
-  //  std::cout << "hasc3c4 1 " << std::endl;
+  //  std::cout << "hasc3c4 src: " << source << " target: " << target <<
+  //  std::endl;
   std::set<unsigned long> source_adj_1, target_adj_1, intersection;
   auto [sBegin, sEnd] = boost::adjacent_vertices(source, *solutionGraph);
   //  std::cout << "hasc3c4 2 " << std::endl;
@@ -438,7 +445,7 @@ bool C3c4free::hasC3C4(unsigned long source, unsigned long target) {
                         std::inserter(intersection, intersection.begin()));
   //  std::cout << "hasc3c4 6 " << std::endl;
   if (!intersection.empty()) {
-    //        std::cout << "3 cycle\n";
+    //    std::cout << "3 cycle\n";
     return true;
   }
   //  std::cout << "hasc3c4 7 " << std::endl;
@@ -449,38 +456,51 @@ bool C3c4free::hasC3C4(unsigned long source, unsigned long target) {
     //    std::cout << "hasc3c4 9 " << std::endl;
     auto [s2Begin, s2End] = boost::adjacent_vertices(j, *solutionGraph);
     for (auto i = s2Begin; i != s2End; ++i) {
+      if (*i == source)
+        continue;
       //      std::cout << "hasc3c4 10 " << std::endl;
       size_t prev_size = source_adj_2.size();
       //      std::cout << "hasc3c4 11 " << std::endl;
       source_adj_2.insert(*i);
-      //      std::cout << "hasc3c4 12 " << std::endl;
-      if (prev_size == source_adj_2.size())
+      //      std::cout << "hasc3c4. : j: " << j << " i: " << *i << std::endl;
+      if (prev_size == source_adj_2.size()) {
+        //        std::cout << "hasc3c4 12. : j: " << j << " i: " << *i <<
+        //        std::endl;
         return true;
+      }
     }
   }
   //  std::cout << "hasc3c4 13 " << std::endl;
   for (const auto& j : target_adj_1) {
     auto [s2Begin, s2End] = boost::adjacent_vertices(j, *solutionGraph);
     for (auto i = s2Begin; i != s2End; ++i) {
+      if (*i == target)
+        continue;
       //      std::cout << "hasc3c4 14 " << std::endl;
       size_t prev_size = target_adj_2.size();
       target_adj_2.insert(*i);
-      //      std::cout << "hasc3c4 15 " << std::endl;
-      if (prev_size == target_adj_2.size())
+      if (prev_size == target_adj_2.size()) {
+        //        std::cout << "hasc3c4 15 " << std::endl;
         return true;
+      }
     }
   }
-  //  std::cout << "hasc3c4 16 " << std::endl;
   std::set_intersection(source_adj_2.begin(), source_adj_2.end(),
                         target_adj_2.begin(), target_adj_2.end(),
                         std::inserter(intersection, intersection.begin()));
-  //  std::cout << "hasc3c4 17 " << std::endl;
-  if (!intersection.empty()) {
-    //        std::cout << "4 cycle\n";
-    //    std::cout << "hasc3c4 18 " << std::endl;
+  if (!intersection.empty())
     return true;
-  }
-  //  std::cout << "hasc3c4 19 " << std::endl;
+  std::set_intersection(source_adj_1.begin(), source_adj_1.end(),
+                        target_adj_2.begin(), target_adj_2.end(),
+                        std::inserter(intersection, intersection.begin()));
+  if (!intersection.empty())
+    return true;
+  std::set_intersection(source_adj_2.begin(), source_adj_2.end(),
+                        target_adj_1.begin(), target_adj_1.end(),
+                        std::inserter(intersection, intersection.begin()));
+  if (!intersection.empty())
+    return true;
+
   return false;
 }
 
