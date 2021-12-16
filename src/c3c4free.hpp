@@ -63,10 +63,11 @@ namespace graph {
     bool addRandomEdges();
 
     bool addRandomEdges2();
-
-    void addEdge(unsigned long e);
-
+    bool addEdge(unsigned long e);
     void removeEdge(unsigned long e);
+
+    // Создаём большой цикл, ходим по нему, соединяя вершины на расстаянии 5
+    void cycleWithCycles();
 
     void clearMarks();
 

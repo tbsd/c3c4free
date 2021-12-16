@@ -73,68 +73,6 @@ def draw_solution(path, edges_path):
 
     im.save("{}_solution.png".format(path))
 
-
-def draw_with_edges_x100(path, edges_path):
-    if not exists(edges_path):
-        return
-    lines = {}
-    with open(path) as fp:
-        lines = fp.readlines()
-    size = int(lines[0].split()[-1])
-    points = [(int(line.split()[0]) * 100, int(line.split()[1]) * 100) for line in lines[1:]]
-
-    minX = minY = maxX = maxY = 0;
-    for p in points:
-        if (minX > p[0]):
-            minX = p[0]
-        if (minY > p[1]):
-            minY = p[1]
-        if (maxX < p[0]):
-            maxX = p[0]
-        if (maxY < p[1]):
-            maxY = p[1]
-
-    dX = -minX
-    dY = -minY
-
-    im = Image.new(mode="RGB", size = (maxX + dX + 1, maxY + dY + 1))
-
-    
-    edges = [(int(line.split()[0]) - 1, int(line.split()[1]) - 1) for line in lines[1:]]
-    draw = ImageDraw.Draw(im)
-    #  for e in edges:
-        #  source = points[e[0]]
-        #  target = points[e[1]]
-        #  edge = [source, target]
-        #  draw.line(edge, fill = "blue", width = 0)
-
-    lines = {}
-    with open(edges_path) as fp:
-        lines = fp.readlines()
-    edges = [(int(line.split()[1]) - 1, int(line.split()[2]) - 1) for line in lines[2:]]
-    for e in edges:
-        source = points[e[0]]
-        target = points[e[1]]
-        edge = [source, target]
-        draw.line(edge, fill = "red", width = 0)
-
-
-        #  source = points[16]
-        #  target = points[10]
-        #  edge = [source, target]
-        #  draw.line(edge, fill = "blue", width = 0)
-        #  source = points[42]
-        #  target = points[16]
-        #  edge = [source, target]
-        #  draw.line(edge, fill = "green", width = 0)
-
-    for p in points:
-        im.putpixel((p[0] + dX, p[1] + dY), (255, 255, 255))
-
-
-    im.save("{}_with_edges.png".format(edges_path))
-
-
 def draw_with_edges(path, edges_path):
     if not exists(edges_path):
         return
@@ -253,7 +191,7 @@ for filename in os.listdir(directory):
     if os.path.isfile(f):
         draw_with_edges("Taxicab_64.txt", f)
 #  draw_with_edges("Taxicab_512.txt", "Kurbatov_512.txt")
-exit(0)
+#  exit(0)
 
 #  while True:
 
@@ -269,7 +207,7 @@ exit(0)
 #  draw_solution("Taxicab_2048.txt", "Kurbatov_2048.txt")
 #  draw_solution("Taxicab_4096.txt", "Kurbatov_4096.txt")
 #
-draw_with_edges("Taxicab_64.txt", "Kurbatov_64.txt")
+#  draw_with_edges("Taxicab_64.txt", "Kurbatov_64.txt")
 #  draw_with_edges("Taxicab_128.txt", "Kurbatov_128.txt")
 #  draw_with_edges("Taxicab_512.txt", "Kurbatov_512.txt")
 #  draw_with_edges("Taxicab_2048.txt", "Kurbatov_2048.txt")
