@@ -93,9 +93,35 @@ void C3c4free::approximate() {
   //  const int graphSz = boost::num_vertices(*matrix);
   curWeight = 0;
   unsigned long no_changes = 0;
-  long prevWeight[] = {0, 0, 0, 0, 0, 0, 0};
+  long prevWeight = 0;
   const int method = 6;
-  const unsigned long no_changes_max = 1;
+  const unsigned long no_changes_max = 0;
+  unsigned long to_reset_max = 5000 * initSize;
+  unsigned long to_reset = 0;
+  unsigned long to_remove_big_edges_max = 5000 * initSize;
+  unsigned long to_remove_big_edges = 0;
+  switch (initSize) {
+    case 64:
+      to_reset_max = 5000 * initSize;
+      to_remove_big_edges_max = 4000;
+      break;
+    case 128:
+      to_reset_max = 2000;
+      to_remove_big_edges_max = 500;
+      break;
+    case 512:
+      to_reset_max = 10;
+      to_remove_big_edges_max = 4;
+      break;
+    case 2048:
+      to_reset_max = 2;
+      to_remove_big_edges_max = 1;
+      break;
+    case 4096:
+      to_reset_max = 2;
+      to_remove_big_edges_max = 1;
+      break;
+  }
 
   cycleWithCycles();
   auto [edges_begin, edges_end] = boost::edges(*solutionGraph);
@@ -137,7 +163,8 @@ void C3c4free::approximate() {
 
     if (no_changes > no_changes_max) {
       auto [edges_begin, edges_end] = boost::edges(*solutionGraph);
-      if (curWeight > prevWeight[method]) {
+      if (curWeight > prevWeight) {
+        to_reset = 0;
         best = Solution(solutionGraph);
         for (auto i = edges_begin; i != edges_end; ++i) {
           (*solutionGraph)[*i].weight =
@@ -145,58 +172,80 @@ void C3c4free::approximate() {
                   .weight;
           best.addEdge(i);
         }
-        prevWeight[method] = curWeight;
+        prevWeight = curWeight;
 
         io::write(*this, "../solutions/" + std::to_string(initSize) + "_" +
                              std::to_string(best.getWeight()) + "_" +
                              std::to_string(method) + ".txt");
-        std::cout << "wheight: " << best.getWeight() << " size: " << best.size()
-                  << " mehtod: " << method << std::endl;
+        std::cout << initSize << ": wheight: " << best.getWeight()
+                  << " size: " << best.size() << " mehtod: " << method
+                  << std::endl;
+      } else {
+        ++to_reset;
+        ++to_remove_big_edges;
       }
-      //      std::cout << "wheight: " << curWeight << " mehtod: " << method
-      //                << std::endl;
-      const long edge_avg = curWeight / boost::num_edges(*solutionGraph);
-      //      const long edge_avg = std::numeric_limits<long>::max();
+      if (to_reset < to_reset_max) {
+        //      std::cout << "wheight: " << curWeight << " mehtod: " << method
+        //                << std::endl;
+        const long edge_avg = curWeight / boost::num_edges(*solutionGraph);
+        //      const long edge_avg = std::numeric_limits<long>::max();
 
-      //          curWeight * 0.8;  ///
-      //      boost::num_edges(*solutionGraph); std::cout << "num_edges: " <<
-      //      boost::num_edges(*solutionGraph)
-      //                << std::endl;
-      //          unsigned long j = 0;
+        //          curWeight * 0.8;  ///
+        //      boost::num_edges(*solutionGraph); std::cout << "num_edges: " <<
+        //      boost::num_edges(*solutionGraph)
+        //                << std::endl;
+        //          unsigned long j = 0;
 
-      unsigned long solution_edge_num = 0;
-      for (auto i = edges_begin; i != edges_end;) {
-        //        std::cout << "remove cycle 1/ i: " << *i << std::endl;
-        long weight =
-            (*matrix)[boost::edge(i->m_source, i->m_target, *matrix).first]
-                .weight;
-        //        long r = rand() % 100;
-        std::random_device rd;
-        std::mt19937 generator(rd());
-        std::uniform_int_distribution<> distribution(0, 100);
-        long r = distribution(generator);
-        long raito = edge_avg * 4 / weight;
-        //        std::cout << "edge_avg / weight; "
-        //                  << static_cast<float>(edge_avg) / weight << ", r: "
-        //                  << r
-        //                  << ", ratio: " << raito << std::endl;
-
-        auto j = i++;
-        //        std::cout << "remove cycle 2" << std::endl;
-        if (weight < edge_avg || r <= raito) {
-          //          curWeight -= weight;
-          //          boost::remove_edge(*j, *solutionGraph);
-          //          boost::remove_edge(*i, *solutionGraph);
-          //          std::cout << "remove cycle 3" << std::endl;
-          removeEdge(*j);
-          //          std::cout << "remove cycle 4" << std::endl;
-          //          removeEdge(j);
+        if (to_remove_big_edges >= to_remove_big_edges_max) {
+          std::cout << initSize << ": removeing big edges " << std::endl;
+          for (auto i = edges_begin; i != edges_end;) {
+            //        std::cout << "remove cycle 1/ i: " << *i << std::endl;
+            long weight =
+                (*matrix)[boost::edge(i->m_source, i->m_target, *matrix).first]
+                    .weight;
+            //        long r = rand() % 100;
+            std::random_device rd;
+            std::mt19937 generator(rd());
+            std::uniform_int_distribution<> distribution(0, 100);
+            long r = distribution(generator);
+            //          long raito = edge_avg * 4 / weight;
+            //            long raito = edge_avg * 15 / weight;
+            long raito = edge_avg * 10 / weight;
+            auto j = i++;
+            if (weight < edge_avg || r < raito) {
+              removeEdge(*j);
+            }
+          }
+          to_remove_big_edges = 0;
+          //          std::cout << "edges removed: " <<
+          //          boost::num_edges(*solutionGraph)
+          //                    << "/" << edges_count << " "
+          //                    <<
+          //                    static_cast<float>(boost::num_edges(*solutionGraph))
+          //                    /
+          //                           edges_count;
+        } else {
+          for (auto i = edges_begin; i != edges_end;) {
+            //        std::cout << "remove cycle 1/ i: " << *i << std::endl;
+            long weight =
+                (*matrix)[boost::edge(i->m_source, i->m_target, *matrix).first]
+                    .weight;
+            //        long r = rand() % 100;
+            auto j = i++;
+            if (weight < edge_avg) {
+              removeEdge(*j);
+            }
+          }
         }
-        ++solution_edge_num;
-        //        ++j;
+      } else {
+        for (auto i = edges_begin; i != edges_end;) {
+          auto j = i++;
+          removeEdge(*j);
+        }
+        to_reset = 0;
+        to_remove_big_edges = 0;
+        std::cout << initSize << ": reset" << std::endl;
       }
-      //            curWeight = 0;
-      //      break;
     }
     //      std::cout << "removed:   " << k << std::endl;
     //      std::cout << initSize << ":" << curWeight << std::endl;
